@@ -16,5 +16,6 @@ def runFusion():
     for i in range(1, len(sys.argv)):
         print(argv[i])
 
+
 if __name__ == '__main__':
     runFusion()
