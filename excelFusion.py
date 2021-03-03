@@ -13,53 +13,70 @@ def IsItNumber(value_check):
         return False
 
 def r1c1_to_a1(row: int, column: int, formula: str):
+    len_formula = len(formula)
     a1 = ""
-    txt_replace = ""
+    parsing_started = False
     start_Row = False
     currentRow = ""
     start_Col = False
     currentCol = ""
-    replaceStarted = False
+
     for i, t in zip(formula, range(0, len(formula))):
-        if i.upper() == "R" and formula[t + 1].upper() != "C":
-            replaceStarted = True
-            start_Row = True
-        elif i == "[":
+        "rows parsing"
+        if i.upper() == "R":
+            next_symb = formula[t + 1]
+            if next_symb.upper() == "C":
+                currentRow = row
+                parsing_started = True
+            elif next_symb == "[" or IsItNumber(next_symb):
+                start_Row = True
+                parsing_started = True
+        elif i == "[" and start_Row:
             pass
-        elif (i == "]" or i.upper() == "C") and start_Row:
+        elif i == "]" and start_Row:
+            currentRow = row + int(currentRow)
             start_Row = False
-            if currentRow:
-                currentRow = row + int(currentRow)
+        elif i.upper() == "C" and start_Row:
+            currentRow = int(currentRow)
+            start_Row = False
         elif start_Row:
             currentRow += i
-        # elif i.upper() == "C" and t == len(formula):
-        #     currentCol = column
-        # elif i.upper() == "C" and not IsItNumber(formula[t+1]) and formula[t+1].upper() != "O":
-        #     currentCol = column
-        elif i.upper() == "C" and t < len(formula) and (IsItNumber(formula[t + 1]) or formula[t + 1] == "["):
-            start_Col = True
-        elif i == "[":
+
+        "column parsing"
+        if i.upper() == "C":
+            if (t+1) <= len_formula:
+                next_symb = formula[t + 1]
+                if next_symb == "[" or IsItNumber(next_symb):
+                    start_Col = True
+                elif not next_symb.isalpha():
+                    currentCol = column
+            else:
+                currentCol = column
+        elif i == "[" and start_Col:
             pass
         elif i == "]" and start_Col:
+            currentCol = column + int(start_Col)
             start_Col = False
-            if currentCol:
-                currentCol = column + int(currentCol)
-            if i == ":":
-                a1 += i
         elif start_Col:
-            currentCol += i
-        else:
-            if replaceStarted:
-                replaceStarted = False
-                a1 += f"{get_column_letter(currentCol if currentCol else column)}" \
-                      f"{str(currentRow) if str(currentRow) else row}"
-                currentRow = ""
-                currentCol = ""
+            if (t+1) <= len_formula:
+                next_symb = formula[t + 1]
+                if not IsItNumber(next_symb):
+                    currentCol += i
+                    currentCol = int(currentCol)
+                    start_Col = False
+                else:
+                    currentCol += i
+
+        if not parsing_started:
             a1 += i
+        elif isinstance(currentRow,int) and isinstance(currentCol, int):
+            a1 += f"{get_column_letter(currentCol)}" \
+                  f"{str(currentRow)}"
+            currentRow = ""
+            currentCol = ""
+            parsing_started = False
 
     return a1
-
-    # print(f"{i}  {t}")
 
 def runFusion():
     """global path"""
@@ -70,9 +87,11 @@ def runFusion():
     # sheet = excel.active
 
     # sheet.cell(1,"C").value = "=D1"
-    # sheet.cell(row=39, column=9, value="=COUNT(R[-24]C:R[-1]C)")
+    # sheet.cell(row=39, column=9, value=r1c1_to_a1(row=39, column=9, formula="=COUNT(R[-24]C:R[-1]C)"))
 
-    curForm = r1c1_to_a1(row=39, column=9, formula="=COUNT(R[-24]C:R[-1]C)")
+    # curForm1 = r1c1_to_a1(row=39, column=9, formula="=COUNT(R[-24]C:R[-1]C)")
+
+    curForm = r1c1_to_a1(row=39, column=9, formula="=COUNTIF(RC9;15)+COUNTIF(RC12:RC16;15)+COUNTIF(RC19:RC23;15)+COUNTIF(RC26:RC30;15)+COUNTIF(RC33:RC37;15)")
     sdf = 0
     # sheet.cell(row=15, column=40, value="=COUNT(I15:I38)")
 
