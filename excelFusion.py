@@ -58,7 +58,7 @@ def r1c1_to_a1(row: int, column: int, formula: str):
             currentCol = column + int(start_Col)
             start_Col = False
         elif start_Col:
-            if (t+1) <= len_formula:
+            if (t+1) < len_formula:
                 next_symb = formula[t + 1]
                 if not IsItNumber(next_symb):
                     currentCol += i
@@ -66,6 +66,10 @@ def r1c1_to_a1(row: int, column: int, formula: str):
                     start_Col = False
                 else:
                     currentCol += i
+            else:
+                currentCol += i
+                currentCol = int(currentCol)
+                start_Col = False
 
         if not parsing_started:
             a1 += i
@@ -91,7 +95,9 @@ def runFusion():
 
     # curForm1 = r1c1_to_a1(row=39, column=9, formula="=COUNT(R[-24]C:R[-1]C)")
 
-    curForm = r1c1_to_a1(row=39, column=9, formula="=COUNTIF(RC9;15)+COUNTIF(RC12:RC16;15)+COUNTIF(RC19:RC23;15)+COUNTIF(RC26:RC30;15)+COUNTIF(RC33:RC37;15)")
+    # curForm = r1c1_to_a1(row=39, column=9, formula="=COUNTIF(RC9;15)+COUNTIF(RC12:RC16;15)+COUNTIF(RC19:RC23;15)+COUNTIF(RC26:RC30;15)+COUNTIF(RC33:RC37;15)")
+
+    curForm = r1c1_to_a1(row=39, column=9, formula="=Челябинск!R41C47+Челябинск!R41C85+Челябинск!R41C126")
     sdf = 0
     # sheet.cell(row=15, column=40, value="=COUNT(I15:I38)")
 
