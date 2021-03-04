@@ -100,15 +100,12 @@ def runFusion():
 
                 if find_separator != -1:
                     cell_Format = comment[:find_separator].replace("format_cell:", "")
-                    "formula"
                     formula = comment[-(len(comment) - find_separator - 1):].replace("formula_R1C1:", "")
                     cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula).replace(";", ",")
                 elif comment.find("formula_R1C1:") != -1:
-                    "formula"
                     formula = comment.replace("formula_R1C1:", "")
                     cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula).replace(";", ",")
                 elif comment.find("format_cell:") != -1:
-                    "format"
                     cell_Format = comment.replace("formula_R1C1:", "")
                 else:
                     cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=comment).replace(";", ",")
