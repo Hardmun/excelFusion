@@ -2,8 +2,8 @@ import sys
 import os
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.comments import Comment
+from openpyxl.formula import Tokenizer
 
 def IsItNumber(value_check):
     try:
@@ -123,8 +123,10 @@ def runFusion():
                     # print(formula)
                     print(r1c1_to_a1(row=cell.row, column=cell.column, formula=formula))
                     a1 = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula)
-                    cell.value = "=COUNTIF(I15;15)" # + COUNTIF(L15:P15;15)"
-                    # dv = DataValidation(type="whole", formula1 = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula))
+                    # cell = "=COUNTIF(I22:K22;30)"
+                    # tz = Tokenizer("=COUNTIF(I22:K22;30)")
+                    sheet["AN16"] = "=COUNTIF(I22:K22;'30')"
+
 
                     break
                     # cell.comment = Comment(r1c1_to_a1(row=cell.row, column=cell.column, formula=formula), "Default")
