@@ -4,9 +4,9 @@ import sys
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
-def IsItNumber(valueCheck):
+def IsItNumber(value_check):
     try:
-        conv_value = int(valueCheck)
+        conv_value = int(value_check)
         return isinstance(conv_value, int)
     except:
         return False
