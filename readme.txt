@@ -1,0 +1,1 @@
+https://openpyxl.readthedocs.io/en/stable/_modules/openpyxl/worksheet/copier.html
