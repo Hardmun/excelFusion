@@ -4,9 +4,9 @@ import sys
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
-def IsItNumber(value_check):
+def IsItNumber(valueCheck):
     try:
-        conv_value = int(value_check)
+        conv_value = int(valueCheck)
         return isinstance(conv_value, int)
     except:
         return False
@@ -90,8 +90,6 @@ def runFusion():
     excel = load_workbook(os.path.join(projectDir, "test_files", "Ярославль.xlsx"))
     sheet = excel.active
 
-    check = 1
-
     for row in sheet.iter_rows():
         for cell in row:
             if cell.comment:
@@ -99,7 +97,9 @@ def runFusion():
                 find_separator = comment.find("|")
 
                 if find_separator != -1:
+                    "cell format"
                     cell_Format = comment[:find_separator].replace("format_cell:", "")
+                    cell.number_format = cell_Format
                     "formula"
                     formula = comment[-(len(comment) - find_separator - 1):].replace("formula_R1C1:", "")
                     cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula).replace(";", ",")
@@ -109,14 +109,17 @@ def runFusion():
                     cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula).replace(";", ",")
                 elif comment.find("format_cell:") != -1:
                     "format"
-                    cell_Format = comment.replace("formula_R1C1:", "")
+                    cell_Format = comment.replace("format_cell:", "")
+                    cell.number_format = cell_Format
+
+                    "converting string to float"
+                    cellValue = cell.value
+                    if cellValue is not None:
+                        cell.value = float(cellValue.replace(",", ".").replace(" ", ""))
+
                 else:
+                    "formula"
                     cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=comment).replace(";", ",")
-
-        else:
-            continue
-
-        break
 
     excel.save(os.path.join(projectDir, "test_files", "Ярославль_remastered.xlsx"))
 
