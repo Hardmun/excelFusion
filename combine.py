@@ -55,13 +55,7 @@ def combineFilesByopenpyxl():
 
     wb1.save(os.path.join(projectDir, "test_files", "fusion.xlsx"))
 
-def copyCell():
-    wb1 = load_workbook(os.path.join(projectDir, "test_files", "Client.xlsx"))
-    target = wb1.create_sheet("lol")
-
-    wb2 = load_workbook(os.path.join(projectDir, "test_files", "Ярославль_remastered.xlsx"))
-    source = wb2.active
-
+def copySheet(target, source):
     for (row, col), source_cell in source._cells.items():
         target_cell = target.cell(column=col, row=row)
         target_cell._value = source_cell._value
@@ -89,10 +83,18 @@ def copyCell():
     target.page_setup = copy(source.page_setup)
     target.print_options = copy(source.print_options)
 
+def copyCell():
+    wb1 = load_workbook(os.path.join(projectDir, "test_files", "Client.xlsx"))
+    target = wb1.create_sheet("lol")
+
+    wb2 = load_workbook(os.path.join(projectDir, "test_files", "Ярославль_remastered.xlsx"))
+    source = wb2.active
+
+    copySheet(target=target, source=source)
 
     wb1.save(os.path.join(projectDir, "test_files", "fusion.xlsx"))
 
-def copySheet():
+def copySheetfromFile():
     wb1 = load_workbook(os.path.join(projectDir, "test_files", "Ярославль_remastered.xlsx"))
     sheetToCopy = wb1["TDSheet"]
     wb1.copy_worksheet(sheetToCopy)
@@ -102,7 +104,7 @@ def copySheet():
     wb1.save(os.path.join(projectDir, "test_files", "fusion.xlsx"))
 
 if __name__ == '__main__':
-    # copySheet()
+    # copySheetfromFile()
     copyCell()
     # combineFilesByopenpyxl()
     # combineFiles()
