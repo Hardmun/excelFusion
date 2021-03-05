@@ -13,7 +13,7 @@ projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) el
 
 def combineFiles():
     wb1 = load_workbook(os.path.join(projectDir, "test_files", "Client.xlsx"))
-    ws1 = wb1.create_sheet("lol")
+    ws1 = wb1.create_sheet(index=0, title="lol")
 
     wb2 = load_workbook(os.path.join(projectDir, "test_files", "Ярославль_remastered.xlsx"))
     ws2 = wb2.active
@@ -69,6 +69,12 @@ def copySheet(target, source):
             target_cell.protection = copy(source_cell.protection)
             target_cell.alignment = copy(source_cell.alignment)
 
+        if source_cell.hyperlink:
+            target_cell._hyperlink = copy(source_cell.hyperlink)
+
+        if source_cell.comment:
+            target_cell.comment = copy(source_cell.comment)
+
     for attr in ('row_dimensions', 'column_dimensions'):
         src = getattr(source, attr)
         trg = getattr(target, attr)
@@ -87,11 +93,12 @@ def copyCell():
     wb1 = load_workbook(os.path.join(projectDir, "test_files", "Client.xlsx"))
     target = wb1.create_sheet("lol")
 
-    wb2 = load_workbook(os.path.join(projectDir, "test_files", "Ярославль_remastered.xlsx"))
+    wb2 = load_workbook(os.path.join(projectDir, "test_files", "yar.xlsx"))
     source = wb2.active
 
     copySheet(target=target, source=source)
 
+    wb1.copy_worksheet(wb1["TDSheet"])
     wb1.save(os.path.join(projectDir, "test_files", "fusion.xlsx"))
 
 def copySheetfromFile():

@@ -1,5 +1,6 @@
 import os
 import sys
+from copy import copy
 
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
@@ -82,46 +83,120 @@ def r1c1_to_a1(row: int, column: int, formula: str):
 
     return a1
 
-def runFusion():
+def copySheet(target, source):
+    for (row, col), source_cell in source._cells.items():
+        target_cell = target.cell(column=col, row=row)
+        target_cell._value = source_cell._value
+        target_cell.data_type = source_cell.data_type
+
+        if source_cell.has_style:
+            target_cell.font = copy(source_cell.font)
+            target_cell.border = copy(source_cell.border)
+            target_cell.fill = copy(source_cell.fill)
+            target_cell.number_format = copy(source_cell.number_format)
+            target_cell.protection = copy(source_cell.protection)
+            target_cell.alignment = copy(source_cell.alignment)
+
+        if source_cell.hyperlink:
+            target_cell._hyperlink = copy(source_cell.hyperlink)
+
+        if source_cell.comment:
+            target_cell.comment = copy(source_cell.comment)
+
+    for attr in ('row_dimensions', 'column_dimensions'):
+        src = getattr(source, attr)
+        trg = getattr(target, attr)
+        for key, dim in src.items():
+            trg[key] = copy(dim)
+            trg[key].worksheet = trg
+
+    target.sheet_format = copy(source.sheet_format)
+    target.sheet_properties = copy(source.sheet_properties)
+    target.merged_cells = copy(source.merged_cells)
+    target.page_margins = copy(source.page_margins)
+    target.page_setup = copy(source.page_setup)
+    target.print_options = copy(source.print_options)
+
+def insertFormulas(sheet):
+    for (row, col), cell in sheet._cells.items():
+        if cell.comment:
+            comment: str = cell.comment.text
+            find_separator = comment.find("|")
+
+            if find_separator != -1:
+                "cell format"
+                cell_Format = comment[:find_separator].replace("format_cell:", "")
+                cell.number_format = cell_Format
+                "formula"
+                formula = comment[-(len(comment) - find_separator - 1):].replace("formula_R1C1:", "")
+                cell.value = r1c1_to_a1(row=row, column=col, formula=formula).replace(";", ",")
+            elif comment.find("formula_R1C1:") != -1:
+                "formula"
+                formula = comment.replace("formula_R1C1:", "")
+                cell.value = r1c1_to_a1(row=row, column=col, formula=formula).replace(";", ",")
+            elif comment.find("format_cell:") != -1:
+                "format"
+                cell_Format = comment.replace("format_cell:", "")
+                cell.number_format = cell_Format
+
+                "converting string to float"
+                cellValue = cell.value
+                if cellValue is not None:
+                    cell.value = float(cellValue.replace(",", ".").replace(" ", ""))
+
+            else:
+                "formula"
+                cell.value = r1c1_to_a1(row=row, column=col, formula=comment).replace(";", ",")
+
+            cell.comment = None
+
+def ExcelFusion(curr_file, fileExcel):
+    wb_path = curr_file.get("file")
+    ws_title = curr_file.get("title")
+
+    """file exists"""
+    if not os.path.isfile(wb_path):
+        return f"File: {wb_path} doesn't exist!!!"
+
+    if fileExcel is None:
+        fileExcel = load_workbook(wb_path)
+        ws = fileExcel.worksheets[0]
+        ws.title = ws_title
+        insertFormulas(ws)
+    else:
+        wb_from = load_workbook(wb_path)
+        ws_from = wb_from.worksheets[0]
+        insertFormulas(ws_from)
+        ws = fileExcel.create_sheet(title=ws_title, index=0)
+        copySheet(ws, ws_from)
+
+    return fileExcel
+
+def readFiles(fileSettings: dict):
+    """checking key - files"""
+    files = fileSettings.get("files")
+    if files is not None:
+        wb = None
+        for curr_file in files:
+            if curr_file:
+                wb = ExcelFusion(curr_file, wb)
+
+    wb.save(os.path.join(projectDir, "test_files", "fusion.xlsx"))
+
+if __name__ == '__main__':
     """global path"""
     projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(
         os.path.abspath(__file__))
 
-    excel = load_workbook(os.path.join(projectDir, "test_files", "Ярославль.xlsx"))
-    sheet = excel.active
+    files_to_read = {
+        "files": [{"title": "Ярославль",
+                   "file": os.path.join(projectDir, "test_files", "Ярославль.xlsx")},
+                  {"title": "Челябинск",
+                   "file": os.path.join(projectDir, "test_files", "Челябинск.xlsx")},
+                  {"title": "сеть",
+                   "file": os.path.join(projectDir, "test_files", "сеть.xlsx")},
+                  {"title": "Client Summary",
+                   "file": os.path.join(projectDir, "test_files", "Client Summary.xlsx")},
+                  ]}
 
-    for row in sheet.iter_rows():
-        for cell in row:
-            if cell.comment:
-                comment: str = cell.comment.text
-                find_separator = comment.find("|")
-
-                if find_separator != -1:
-                    "cell format"
-                    cell_Format = comment[:find_separator].replace("format_cell:", "")
-                    cell.number_format = cell_Format
-                    "formula"
-                    formula = comment[-(len(comment) - find_separator - 1):].replace("formula_R1C1:", "")
-                    cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula).replace(";", ",")
-                elif comment.find("formula_R1C1:") != -1:
-                    "formula"
-                    formula = comment.replace("formula_R1C1:", "")
-                    cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=formula).replace(";", ",")
-                elif comment.find("format_cell:") != -1:
-                    "format"
-                    cell_Format = comment.replace("format_cell:", "")
-                    cell.number_format = cell_Format
-
-                    "converting string to float"
-                    cellValue = cell.value
-                    if cellValue is not None:
-                        cell.value = float(cellValue.replace(",", ".").replace(" ", ""))
-
-                else:
-                    "formula"
-                    cell.value = r1c1_to_a1(row=cell.row, column=cell.column, formula=comment).replace(";", ",")
-
-    excel.save(os.path.join(projectDir, "test_files", "Ярославль_remastered.xlsx"))
-
-if __name__ == '__main__':
-    runFusion()
+    readFiles(files_to_read)
