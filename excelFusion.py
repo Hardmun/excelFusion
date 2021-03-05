@@ -122,6 +122,7 @@ def insertFormulas(sheet):
         if cell.comment:
             comment: str = cell.comment.text
             find_separator = comment.find("|")
+            deleteComment = True
 
             if find_separator != -1:
                 "cell format"
@@ -144,11 +145,15 @@ def insertFormulas(sheet):
                 if cellValue is not None:
                     cell.value = float(cellValue.replace(",", ".").replace(" ", ""))
 
-            else:
+            elif comment.find("formula:") != -1:
                 "formula"
-                cell.value = r1c1_to_a1(row=row, column=col, formula=comment).replace(";", ",")
+                formula = comment.replace("formula:", "")
+                cell.value = r1c1_to_a1(row=row, column=col, formula=formula).replace(";", ",")
+            else:
+                deleteComment = False
 
-            cell.comment = None
+            if deleteComment:
+                cell.comment = None
 
 def ExcelFusion(curr_file, fileExcel):
     wb_path = curr_file.get("file")
@@ -172,31 +177,30 @@ def ExcelFusion(curr_file, fileExcel):
 
     return fileExcel
 
-def readFiles(fileSettings: dict):
+def readFiles(fileSettings_string):
+    """global path"""
+    projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(
+        os.path.abspath(__file__))
+
+    """convert to dict"""
+    fileSettings = eval(fileSettings_string)
+
     """checking key - files"""
-    files = fileSettings.get("files")
+    settings = fileSettings.get("settings")
+
+    files = settings.get("files")
     if files is not None:
         wb = None
         for curr_file in files:
             if curr_file:
                 wb = ExcelFusion(curr_file, wb)
 
-    wb.save(os.path.join(projectDir, "test_files", "fusion.xlsx"))
+        saveAs = os.path.abspath(settings.get("SaveAs"))
+        wb.save(saveAs)
 
 if __name__ == '__main__':
-    """global path"""
-    projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(
-        os.path.abspath(__file__))
-
-    files_to_read = {
-        "files": [{"title": "Ярославль",
-                   "file": os.path.join(projectDir, "test_files", "Ярославль.xlsx")},
-                  {"title": "Челябинск",
-                   "file": os.path.join(projectDir, "test_files", "Челябинск.xlsx")},
-                  {"title": "сеть",
-                   "file": os.path.join(projectDir, "test_files", "сеть.xlsx")},
-                  {"title": "Client Summary",
-                   "file": os.path.join(projectDir, "test_files", "Client Summary.xlsx")},
-                  ]}
-
+    if len(sys.argv) == 2:
+        files_to_read = sys.argv[1]
+    else:
+        raise Exception("Wrong parameters.")
     readFiles(files_to_read)
