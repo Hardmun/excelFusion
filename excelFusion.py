@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from copy import copy
@@ -5,6 +6,32 @@ from copy import copy
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
+"""global path"""
+projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(
+    os.path.abspath(__file__))
+
+loggerglobal = logging.getLogger("global")
+loggerglobal.setLevel(logging.ERROR)
+
+formatter = logging.Formatter("%(asctime)s:%(message)s")
+
+globalHandler = logging.FileHandler(os.path.join(projectDir, "global.log"))
+globalHandler.setLevel(logging.raiseExceptions)
+globalHandler.setFormatter(formatter)
+
+loggerglobal.addHandler(globalHandler)
+
+def logDecorator(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except BaseException as errMsg:
+            loggerglobal.exception(f"An error has been occurred in function {func.__name__}", exc_info=errMsg)
+            raise BaseException
+
+    return wrapper
+
+@logDecorator
 def IsItNumber(value_check):
     try:
         conv_value = int(value_check)
@@ -12,6 +39,7 @@ def IsItNumber(value_check):
     except:
         return False
 
+@logDecorator
 def r1c1_to_a1(row: int, column: int, formula: str):
     len_formula = len(formula)
     a1 = ""
@@ -83,6 +111,7 @@ def r1c1_to_a1(row: int, column: int, formula: str):
 
     return a1
 
+@logDecorator
 def copySheet(target, source):
     for (row, col), source_cell in source._cells.items():
         target_cell = target.cell(column=col, row=row)
@@ -117,6 +146,7 @@ def copySheet(target, source):
     target.page_setup = copy(source.page_setup)
     target.print_options = copy(source.print_options)
 
+@logDecorator
 def insertFormulas(sheet):
     for (row, col), cell in sheet._cells.items():
         if cell.comment:
@@ -155,6 +185,7 @@ def insertFormulas(sheet):
             if deleteComment:
                 cell.comment = None
 
+@logDecorator
 def ExcelFusion(curr_file, fileExcel):
     wb_path = curr_file.get("file")
     ws_title = curr_file.get("title")
@@ -177,11 +208,8 @@ def ExcelFusion(curr_file, fileExcel):
 
     return fileExcel
 
+@logDecorator
 def readFiles(fileSettings_string):
-    """global path"""
-    projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(
-        os.path.abspath(__file__))
-
     """convert to dict"""
     fileSettings = eval(fileSettings_string)
 
