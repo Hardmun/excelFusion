@@ -1,5 +1,9 @@
-https://openpyxl.readthedocs.io/en/stable/_modules/openpyxl/worksheet/copier.html
+1) Read from file
+# with open(os.path.join(projectDir, "file.json"), "r", encoding="UTF-8") as filereader:
+#     files_to_read = filereader.read()
 
-"{'settings': {         'files': [{'title': 'Ярославль',                    'file': os.path.join(projectDir, 'test_files', 'Ярославль.xlsx')},                   {'title': 'Челябинск',                    'file': os.path.join(projectDir, 'test_files', 'Челябинск.xlsx')},                   {'title': 'сеть',                    'file': os.path.join(projectDir, 'test_files', 'сеть.xlsx')},                   {'title': 'Client Summary',                    'file': os.path.join(projectDir, 'test_files', 'Client Summary.xlsx')},                   ],         'SaveAs': os.path.join(projectDir, 'test_files', 'fusion.xlsx')     }}"
+2) parameter
+"{ 'settings': { 'files': [ 'Ярославль', 'Челябинск', 'сеть', 'Client Summary' ], 'uuid': 'test_files' } }"
 
-this is origin
+3) compile
+pyinstaller -F -w --icon=excel.ico excelFusion.py

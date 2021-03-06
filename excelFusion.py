@@ -6,20 +6,26 @@ from copy import copy
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
-"""global path"""
-projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(
-    os.path.abspath(__file__))
+projectDir: str = ""
+loggerglobal = None
 
-loggerglobal = logging.getLogger("global")
-loggerglobal.setLevel(logging.ERROR)
+def getGlobalVariables():
+    """global path"""
+    global projectDir
+    projectDir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(
+        os.path.abspath(__file__))
 
-formatter = logging.Formatter("%(asctime)s:%(message)s")
+    global loggerglobal
+    loggerglobal = logging.getLogger("errors")
+    loggerglobal.setLevel(logging.ERROR)
 
-globalHandler = logging.FileHandler(os.path.join(projectDir, "global.log"))
-globalHandler.setLevel(logging.raiseExceptions)
-globalHandler.setFormatter(formatter)
+    formatter = logging.Formatter("%(asctime)s:%(message)s")
 
-loggerglobal.addHandler(globalHandler)
+    globalHandler = logging.FileHandler(os.path.join(projectDir, "errors.log"))
+    globalHandler.setLevel(logging.raiseExceptions)
+    globalHandler.setFormatter(formatter)
+
+    loggerglobal.addHandler(globalHandler)
 
 def logDecorator(func):
     def wrapper(*args, **kwargs):
@@ -27,7 +33,7 @@ def logDecorator(func):
             return func(*args, **kwargs)
         except BaseException as errMsg:
             loggerglobal.exception(f"An error has been occurred in function {func.__name__}", exc_info=errMsg)
-            raise BaseException
+            raise
 
     return wrapper
 
@@ -186,9 +192,8 @@ def insertFormulas(sheet):
                 cell.comment = None
 
 @logDecorator
-def ExcelFusion(curr_file, fileExcel):
-    wb_path = curr_file.get("file")
-    ws_title = curr_file.get("title")
+def ExcelFusion(sheet_name, tempDir, fileExcel):
+    wb_path = os.path.join(projectDir, tempDir, f'{sheet_name}.xlsx')
 
     """file exists"""
     if not os.path.isfile(wb_path):
@@ -197,13 +202,13 @@ def ExcelFusion(curr_file, fileExcel):
     if fileExcel is None:
         fileExcel = load_workbook(wb_path)
         ws = fileExcel.worksheets[0]
-        ws.title = ws_title
+        ws.title = sheet_name
         insertFormulas(ws)
     else:
         wb_from = load_workbook(wb_path)
         ws_from = wb_from.worksheets[0]
         insertFormulas(ws_from)
-        ws = fileExcel.create_sheet(title=ws_title, index=0)
+        ws = fileExcel.create_sheet(title=sheet_name, index=0)
         copySheet(ws, ws_from)
 
     return fileExcel
@@ -216,19 +221,22 @@ def readFiles(fileSettings_string):
     """checking key - files"""
     settings = fileSettings.get("settings")
 
+    tempDir = settings.get("uuid")
+
     files = settings.get("files")
     if files is not None:
         wb = None
         for curr_file in files:
             if curr_file:
-                wb = ExcelFusion(curr_file, wb)
+                wb = ExcelFusion(curr_file, tempDir, wb)
 
-        saveAs = os.path.abspath(settings.get("SaveAs"))
+        saveAs = os.path.join(projectDir, settings.get("uuid"), "fusion.xlsx")
         wb.save(saveAs)
 
 if __name__ == '__main__':
+    getGlobalVariables()
     if len(sys.argv) == 2:
         files_to_read = sys.argv[1]
+        readFiles(files_to_read)
     else:
-        raise Exception("Wrong parameters.")
-    readFiles(files_to_read)
+        loggerglobal.exception(f"Wrong parameters: {str(sys.argv)}")
