@@ -33,7 +33,7 @@ def logDecorator(func):
             return func(*args, **kwargs)
         except BaseException as errMsg:
             loggerglobal.exception(f"An error has been occurred in function {func.__name__}", exc_info=errMsg)
-            raise
+            sys.exit(0)
 
     return wrapper
 
