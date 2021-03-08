@@ -164,7 +164,7 @@ def insertFormulas(sheet):
             if find_separator != -1:
                 "cell format"
                 cell_Format = comment[:find_separator].replace("format_cell:", "")
-                cell.number_format = cell_Format
+                cell.number_format = cell_Format.replace(",", ".")
                 "formula"
                 formula = comment[-(len(comment) - find_separator - 1):].replace("formula_R1C1:", "")
                 cell.value = r1c1_to_a1(row=row, column=col, formula=formula).replace(";", ",")
@@ -175,7 +175,7 @@ def insertFormulas(sheet):
             elif comment.find("format_cell:") != -1:
                 "format"
                 cell_Format = comment.replace("format_cell:", "")
-                cell.number_format = cell_Format
+                cell.number_format = cell_Format.replace(",", ".")
 
                 "converting string to float"
                 cellValue = cell.value
@@ -209,7 +209,6 @@ def ExcelFusion(sheet_name, tempDir, fileExcel):
         wb_from = load_workbook(wb_path)
         ws_from = wb_from.worksheets[0]
         insertFormulas(ws_from)
-        wb_from.save(os.path.join(os.path.split(wb_path)[0],f"mod_{os.path.split(wb_path)[1]}"))
         ws = fileExcel.create_sheet(title=sheet_name, index=0)
         copySheet(ws, ws_from)
 
