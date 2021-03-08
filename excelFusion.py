@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from copy import copy
+from shutil import rmtree
 
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
@@ -208,10 +209,22 @@ def ExcelFusion(sheet_name, tempDir, fileExcel):
         wb_from = load_workbook(wb_path)
         ws_from = wb_from.worksheets[0]
         insertFormulas(ws_from)
+        wb_from.save(os.path.join(os.path.split(wb_path)[0],f"mod_{os.path.split(wb_path)[1]}"))
         ws = fileExcel.create_sheet(title=sheet_name, index=0)
         copySheet(ws, ws_from)
 
     return fileExcel
+
+@logDecorator
+def clearTempFiles():
+    for dir in os.listdir(path=projectDir):
+        dirToDelete = os.path.join(projectDir, dir)
+        if os.path.isdir(dirToDelete):
+            rmtree(dirToDelete, ignore_errors=True)
+
+def clearLogs():
+    globalHandler = logging.FileHandler(os.path.join(projectDir, "errors.log"), "w")
+    loggerglobal.addHandler(globalHandler)
 
 @logDecorator
 def readFiles(fileSettings_string):
@@ -236,7 +249,12 @@ def readFiles(fileSettings_string):
 if __name__ == '__main__':
     getGlobalVariables()
     if len(sys.argv) == 2:
-        files_to_read = sys.argv[1]
-        readFiles(files_to_read)
+        arg = sys.argv[1]
+        if arg == "-clear":
+            clearTempFiles()
+        elif arg == "-clearLogs":
+            clearLogs()
+        else:
+            readFiles(arg)
     else:
         loggerglobal.exception(f"Wrong parameters: {str(sys.argv)}")
