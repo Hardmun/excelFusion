@@ -175,7 +175,7 @@ def insertFormulas(sheet):
             elif comment.find("format_cell:") != -1:
                 "format"
                 cell_Format = comment.replace("format_cell:", "")
-                cell.number_format = replace(",", ".").replace(" ", ",")
+                cell.number_format = cell_Format.replace(",", ".").replace(" ", ",")
 
                 "converting string to float"
                 cellValue = cell.value
