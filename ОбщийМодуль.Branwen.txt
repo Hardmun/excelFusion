@@ -1,0 +1,126 @@
+
+//==begin === Nikulin V. 06.03.2021 ====
+Function GetBranwenDirectory(UUID_Dir) Export
+	//Temp dir
+	tmpDir = TempFilesDir() + "Branwen\";
+
+	//Branwen directory
+	File =  New File(tmpDir);
+	If Not File.Exist() Then
+		CreateDirectory(tmpDir);
+	EndIf;
+
+	//external file
+	extFile = tmpDir + "ExcelFusion.exe";
+	File =  New File(extFile);
+	If Not File.Exist() Then
+		binaryFile = GetCommonTemplate("ExcelFusion");
+		binaryFile.Write(extFile);
+	EndIf;
+
+	//*.xlsx dir
+	xlsx_dir = tmpDir + UUID_Dir;
+	File =  New File(xlsx_dir);
+	If Not File.Exist() Then
+		CreateDirectory(xlsx_dir);
+	EndIf;
+
+	Return tmpDir;
+EndFunction
+
+Function GetCombineFile(xlsx_files, bDir, UUID_Dir) Export
+	//Creating JSON
+	json_record = New JSONWriter;
+	json_record.ValidateStructure = True;
+	json_params = New JSONWriterSettings(,,False);
+	//json_record.OpenFile(bDir + "file.json",,,json_params);
+	json_record.SetString(json_params);
+
+	//starting to write
+	json_record.WriteStartObject();
+	json_record.WritePropertyName("settings");
+
+	DetailsArray = New Array;
+
+	For Each file In xlsx_files Do
+		DetailsArray.Add(file);
+	EndDo;
+
+	fldStructure = New Structure();
+	fldStructure.Insert("files"	, DetailsArray);
+	fldStructure.Insert("uuid"	, UUID_Dir);
+
+	WriteJSON(json_record,fldStructure);
+
+	json_record.WriteEndObject();
+	json_string = json_record.Close();
+
+	WshShell = New COMObject("Wscript.Shell");
+	WshShell.run(bDir + "ExcelFusion.exe " + """" + json_string + """", 0, True);
+	//WshShell.run(bDir + "ExcelFusion.exe", 0, True);
+
+	//Результат
+	Result = New Structure();
+
+	ResultFilePath = bDir + UUID_Dir + "/fusion.xlsx";
+	ResultFile = New File(ResultFilePath);
+	If ResultFile.Exist() Then
+		Result.Insert("file", New BinaryData(ResultFilePath));
+		Result.Insert("error", False);
+	Else
+		logFilePath = bDir + "errors.log";
+		logFile		= New File(logFilePath);
+		If logFile.Exist() Then
+			Result.Insert("file", New BinaryData(logFilePath));
+			Result.Insert("error", True);
+		Else
+			Result.Insert("file", "Не обнаружено файлов на сервере!");
+			Result.Insert("error", True);
+		EndIf;
+	EndIf;
+
+	WshShell.run(bDir + "ExcelFusion.exe ""-clear""",0,False);
+
+	Return PutToTempStorage(Result);
+EndFunction
+
+Function ClearErrorLog() Export
+	//Temp dir
+	tmpDir = TempFilesDir() + "Branwen\";
+
+	//external file
+	extFile = tmpDir + "ExcelFusion.exe";
+	File =  New File(extFile);
+	If Not File.Exist() Then
+		binaryFile = GetCommonTemplate("ExcelFusion");
+		binaryFile.Write(extFile);
+	EndIf;
+
+	WshShell = New COMObject("Wscript.Shell");
+	WshShell.run(tmpDir + "ExcelFusion.exe -clearLogs",0,False);
+EndFunction
+
+Function GetLogFile() Export
+	tmpDir = TempFilesDir() + "Branwen\";
+
+	//external file
+	logFile = tmpDir + "errors.log";
+
+	File =  New File(logFile);
+	If  File.Exist() Then
+		binaryFile = New BinaryData(logFile);
+		Return PutToTempStorage(binaryFile);
+	EndIf;
+EndFunction
+
+Procedure UpdateExtFile() Export
+	//Temp dir
+	tmpDir = TempFilesDir() + "Branwen\";
+
+	//external file
+	extFile = tmpDir + "ExcelFusion.exe";
+
+	binaryFile = GetCommonTemplate("ExcelFusion");
+	binaryFile.Write(extFile);
+EndProcedure
+//==end ===== Nikulin V. 06.03.2021 ====
