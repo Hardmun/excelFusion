@@ -164,7 +164,7 @@ def insertFormulas(sheet):
             if find_separator != -1:
                 "cell format"
                 cell_Format = comment[:find_separator].replace("format_cell:", "")
-                cell.number_format = cell_Format.replace(",", ".")
+                cell.number_format = cell_Format.replace(",", ".").replace(" ", ",")
                 "formula"
                 formula = comment[-(len(comment) - find_separator - 1):].replace("formula_R1C1:", "")
                 cell.value = r1c1_to_a1(row=row, column=col, formula=formula).replace(";", ",")
@@ -175,7 +175,7 @@ def insertFormulas(sheet):
             elif comment.find("format_cell:") != -1:
                 "format"
                 cell_Format = comment.replace("format_cell:", "")
-                cell.number_format = cell_Format.replace(",", ".")
+                cell.number_format = replace(",", ".").replace(" ", ",")
 
                 "converting string to float"
                 cellValue = cell.value
