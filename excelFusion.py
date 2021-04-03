@@ -195,13 +195,15 @@ def insertFormulas(sheet):
 @logDecorator
 def hideRows(ws):
     """reading A1 cell comment"""
-    commentObj = ws.cell(column=1, row=1).comment
-    if commentObj:
-        comment: str = commentObj.text
+    cell = ws.cell(column=1, row=1)
+    if cell.comment:
+        comment: str = cell.comment.text
         if comment and comment.find("hidden:") != -1:
             hiddenRows = comment.replace("hidden:", "").split(',')
             for row in hiddenRows:
                 ws.row_dimensions[int(row)].hidden = True
+
+        cell.comment = None
 
 @logDecorator
 def ExcelFusion(sheet_name, tempDir, fileExcel):
