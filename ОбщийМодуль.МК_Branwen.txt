@@ -1,5 +1,6 @@
 
 //==begin === Nikulin V. 06.03.2021 ====
+// https://github.com/Hardmun/excelFusion.git
 Function GetBranwenDirectory(UUID_Dir) Export
 	//Temp dir
 	tmpDir = TempFilesDir() + "Branwen\";
@@ -14,8 +15,9 @@ Function GetBranwenDirectory(UUID_Dir) Export
 	extFile = tmpDir + "ExcelFusion.exe";
 	File =  New File(extFile);
 	If Not File.Exist() Then
-		binaryFile = GetCommonTemplate("ExcelFusion");
-		binaryFile.Write(extFile);
+		//binaryFile = GetCommonTemplate("ExcelFusion");
+		//binaryFile.Write(extFile);
+		UpdateExtFile(extFile);
 	EndIf;
 
 	//*.xlsx dir
@@ -59,7 +61,7 @@ Function GetCombineFile(xlsx_files, bDir, UUID_Dir) Export
 	WshShell.run(bDir + "ExcelFusion.exe " + """" + json_string + """", 0, True);
 	//WshShell.run(bDir + "ExcelFusion.exe", 0, True);
 
-	//Результат
+	//Result
 	Result = New Structure();
 
 	ResultFilePath = bDir + UUID_Dir + "/fusion.xlsx";
@@ -113,14 +115,27 @@ Function GetLogFile() Export
 	EndIf;
 EndFunction
 
-Procedure UpdateExtFile() Export
-	//Temp dir
-	tmpDir = TempFilesDir() + "Branwen\";
+Procedure UpdateExtFile(extFile = Undefined) Export
+	If extFile = Undefined Then
+		//Temp dir
+		tmpDir = TempFilesDir() + "Branwen\";
 
-	//external file
-	extFile = tmpDir + "ExcelFusion.exe";
+		//Branwen directory
+		File =  New File(tmpDir);
+		If Not File.Exist() Then
+			CreateDirectory(tmpDir);
+		EndIf;
 
-	binaryFile = GetCommonTemplate("ExcelFusion");
-	binaryFile.Write(extFile);
+		//external file
+		extFile = tmpDir + "ExcelFusion.exe";
+	EndIf;
+
+	//temporary(home pc)
+	FTPConn = New FTPConnection("79.120.10.92", 21, "ftpuser", "123Qwe123", Undefined, True, 15, Undefined);
+	FTPConn.SetCurrentDirectory("/dentsu");
+	FTPConn.Get("excelFusion.exe", extFile);
+
+	//binaryFile = GetCommonTemplate("ExcelFusion");
+	//binaryFile.Write(extFile);
 EndProcedure
 //==end ===== Nikulin V. 06.03.2021 ====
