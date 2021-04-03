@@ -193,6 +193,17 @@ def insertFormulas(sheet):
                 cell.comment = None
 
 @logDecorator
+def hideRows(ws):
+    """reading A1 cell comment"""
+    commentObj = ws.cell(column=1, row=1).comment
+    if commentObj:
+        comment: str = commentObj.text
+        if comment and comment.find("hidden:") != -1:
+            hiddenRows = comment.replace("hidden:", "").split(',')
+            for row in hiddenRows:
+                ws.row_dimensions[int(row)].hidden = True
+
+@logDecorator
 def ExcelFusion(sheet_name, tempDir, fileExcel):
     wb_path = os.path.join(projectDir, tempDir, f'{sheet_name}.xlsx')
 
@@ -211,6 +222,8 @@ def ExcelFusion(sheet_name, tempDir, fileExcel):
         insertFormulas(ws_from)
         ws = fileExcel.create_sheet(title=sheet_name, index=0)
         copySheet(ws, ws_from)
+
+    hideRows(ws)
 
     return fileExcel
 
