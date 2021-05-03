@@ -1,9 +1,5 @@
-1) Read from file
-# with open(os.path.join(projectDir, "file.json"), "r", encoding="UTF-8") as filereader:
-#     files_to_read = filereader.read()
-
-2) parameter
+1) parameter for testing
 "{ 'settings': { 'files': [ 'Ярославль', 'Челябинск', 'сеть', 'Client Summary' ], 'uuid': 'test_files' } }"
 
-3) compile
+2) compile excelFusion.py to exe file
 pyinstaller -F -w --icon=excel.ico excelFusion.py
