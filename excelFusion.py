@@ -4,6 +4,7 @@ import sys
 from copy import copy
 from shutil import rmtree
 
+from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
@@ -222,7 +223,13 @@ def ExcelFusion(sheet_name, tempDir, fileExcel):
         wb_from = load_workbook(wb_path)
         ws_from = wb_from.worksheets[0]
         insertFormulas(ws_from)
-        ws = fileExcel.create_sheet(title=sheet_name, index=0)
+        """if worksheet name not equal sheet create new one"""
+        if fileExcel.worksheets[0].title == "Sheet":
+            ws = fileExcel.worksheets[0]
+            ws.title = sheet_name
+        else:
+            ws = fileExcel.create_sheet(title=sheet_name, index=0)
+
         copySheet(ws, ws_from)
 
     hideRows(ws)
@@ -252,7 +259,8 @@ def readFiles(fileSettings_string):
 
     files = settings.get("files")
     if files is not None:
-        wb = None
+        """if wb = None 1st excel list will be taken"""
+        wb = Workbook()
         for curr_file in files:
             if curr_file:
                 wb = ExcelFusion(curr_file, tempDir, wb)
